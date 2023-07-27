@@ -335,6 +335,9 @@ public:
     
     Paginator(Iter begin, Iter end, size_t size) {
         for (auto i = begin; i != end; advance(i, size)) {
+        if (end - i < size) {
+            size -= (end - i);
+        }
             pages.push_back(IteratorRange<Iter>(i, size));
         }
     }
@@ -371,7 +374,7 @@ ostream& operator<<(ostream& os, const Document& document) {
 template <typename Iter>
 ostream& operator<<(ostream& os, const IteratorRange<Iter>& range) {
     for (auto i = range.begin(); i != range.end(); ++i) {
-        os << *i << endl;
+        os << *i;
     }
     return os;
 }
