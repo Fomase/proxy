@@ -100,7 +100,7 @@ public:
                      const vector<int>& ratings) {
         const vector<string> words = SplitIntoWordsNoStop(document);
         if (document_id < 0 || documents_.count(document_id) != 0) {
-            throw out_of_range("Некорректный id документа");
+            throw invalid_argument("Некорректный id документа");
         }
         const double inv_word_count = 1.0 / words.size();
         for (const string& word : words) {
