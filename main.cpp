@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 #include <optional>
+#include <stdexcept>
 
 using namespace std;
 
@@ -338,7 +339,7 @@ public:
         return ManageRequest(search_server.FindTopDocuments(raw_query));
     }
     int GetNoResultRequests() const {
-        return count(requests_.begin(), requests_.end(), false);
+        return count_if(requests_.begin(), requests_.end(), [](QueryResult res) {return !res.request_type;});
     }
 private:
     struct QueryResult {
@@ -353,14 +354,91 @@ private:
             requests_.pop_front();
         }
         if (!documents.empty()) {
-            requests_.push_front({true});
+            requests_.push_back({true});
         } else {
             
-            requests_.push_front({false});
+            requests_.push_back({false});
         }
         return documents;
     }
 };
+
+template <typename Iter>
+class IteratorRange {
+    public:
+    
+    IteratorRange(Iter begin, size_t size) : range_begin(begin), range_end(begin + size)
+    {}
+     
+    auto begin() const {
+    return range_begin;
+    }
+    
+    auto end() const {
+    return range_end;
+    }
+    
+    size_t size() const {
+    return distance(range_begin, range_end);
+    }
+     
+    private:
+    
+    Iter range_begin;
+    Iter range_end;
+};
+
+
+template <typename Iter>
+class Paginator {
+public:
+    
+    Paginator(Iter begin, Iter end, size_t size) {
+        for (auto i = begin; i != end; advance(i, size)) {
+            if (end - i < size) {
+                size -= (end - i);
+            }
+            pages.push_back(IteratorRange<Iter>(i, size));
+        }
+    }
+    
+    auto begin() const {
+    return pages.begin();
+    }
+    
+    auto end() const {
+    return pages.end();
+    }
+    
+    size_t size() const {
+    return pages.size();
+    }
+    
+private:
+    
+    vector<IteratorRange<Iter>> pages;
+};
+
+template <typename Container>
+auto Paginate(const Container& c, size_t page_size) {
+    return Paginator(begin(c), end(c), page_size);
+}
+
+ostream& operator<<(ostream& os, const Document& document) {
+        os << "{ " << "document_id" << " = " << document.id <<
+        ", relevance = " << document.relevance <<
+        ", rating = " << document.rating << " }";
+        return os;
+    }
+
+template <typename Iter>
+ostream& operator<<(ostream& os, const IteratorRange<Iter>& range) {
+    for (auto i = range.begin(); i != range.end(); ++i) {
+        os << *i;
+    }
+    return os;
+}
+
 
 int main() {
     SearchServer search_server("and in at"s);
