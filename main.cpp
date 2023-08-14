@@ -1,37 +1,45 @@
-#include <cstdint>
+#include <string>
 #include <iostream>
+#include <vector>
+#include "document.h"
+#include "paginator.h"
+#include "read_input_functions.h"
+#include "request_queue.h"
+#include "search_server.h"
+#include "string_processing.h"
+#include "test_example_functions.h"
+#include "remove_duplicates.h"
 
 using namespace std;
 
-// упростите эту экспоненциальную функцию,
-// реализовав линейный алгоритм
-int64_t T(int i) {
-    if (i == 1 || i ==0) {
-        return 0;
-    }
-    int t1 = 0;
-    int t2 = 0;
-    int t3 = 1;
-    int hold;
-    
-    for (int j = 2; j < i; ++j) {
-        hold = t3;
-        t3 += t2 + t1;
-        t1 = t2;
-        t2 = hold;
-    }
-    return t3;
-}
-
 int main() {
-    int i;
+    SearchServer search_server("and with"s);
 
-    while (true) {
-        cout << "Enter index: "s;
-        if (!(cin >> i)) {
-            break;
-        }
+    AddDocument(search_server, 1, "funny pet and nasty rat"s, DocumentStatus::ACTUAL, {7, 2, 7});
+    AddDocument(search_server, 2, "funny pet with curly hair"s, DocumentStatus::ACTUAL, {1, 2});
 
-        cout << "Ti = "s << T(i) << endl;
-    }
-}
+    // дубликат документа 2, будет удалён
+    AddDocument(search_server, 3, "funny pet with curly hair"s, DocumentStatus::ACTUAL, {1, 2});
+
+    // отличие только в стоп-словах, считаем дубликатом
+    AddDocument(search_server, 4, "funny pet and curly hair"s, DocumentStatus::ACTUAL, {1, 2});
+
+    // множество слов такое же, считаем дубликатом документа 1
+    AddDocument(search_server, 5, "funny funny pet and nasty nasty rat"s, DocumentStatus::ACTUAL, {1, 2});
+
+    // добавились новые слова, дубликатом не является
+    AddDocument(search_server, 6, "funny pet and not very nasty rat"s, DocumentStatus::ACTUAL, {1, 2});
+
+    // множество слов такое же, как в id 6, несмотря на другой порядок, считаем дубликатом
+    AddDocument(search_server, 7, "very nasty rat and not very funny pet"s, DocumentStatus::ACTUAL, {1, 2});
+
+    // есть не все слова, не является дубликатом
+    AddDocument(search_server, 8, "pet with rat and rat and rat"s, DocumentStatus::ACTUAL, {1, 2});
+
+    // слова из разных документов, не является дубликатом
+    AddDocument(search_server, 9, "nasty rat with curly hair"s, DocumentStatus::ACTUAL, {1, 2});
+    
+    cout << "Before duplicates removed: "s << search_server.GetDocumentCount() << endl;
+    RemoveDuplicates(search_server);
+    cout << "After duplicates removed: "s << search_server.GetDocumentCount() << endl;
+} 
