@@ -30,7 +30,7 @@ SearchServer::SearchServer(const std::string& stop_words_text)
             words_to_documents_[document_id].insert(word);
         }
         documents_.emplace(document_id, DocumentData{ComputeAverageRating(ratings), status});
-        documents_q_.push_back(document_id);
+        documents_id_.insert(document_id);
     }
 
     std::set<int> SearchServer::FindDuplicates(int document_id) const {
@@ -76,18 +76,15 @@ SearchServer::SearchServer(const std::string& stop_words_text)
     }
 
     void SearchServer::RemoveDocument(int document_id) {
-
+        for (auto& word : words_to_documents_[document_id]) {
+            word_to_document_freqs_[word].erase(document_id);
+        }
+            
         words_to_documents_.erase(find_if(words_to_documents_.begin(), words_to_documents_.end(), [document_id](auto document) {return document.first == document_id;}));
         
         documents_.erase(find_if(documents_.begin(), documents_.end(), [document_id](auto document) {return document.first == document_id;}));
         
         documents_id_.erase(find_if(documents_id_.begin(), documents_id_.end(), [document_id](auto document) {return document == document_id;}));
-        
-        auto iter = word_to_document_freqs_.begin(); 
-        while (iter != word_to_document_freqs_.end()) {
-            auto iter = find_if(word_to_document_freqs_.begin(), word_to_document_freqs_.end(), [document_id](auto word){return word.second.count(document_id);});
-            word_to_document_freqs_.erase(iter);
-        }
     }
     
     int SearchServer::GetDocumentCount() const {
