@@ -67,12 +67,12 @@ SearchServer::SearchServer(const std::string& stop_words_text)
         return documents_q_.at(index);
     }*/
     
-    std::map<int, std::set<std::string>>::const_iterator  SearchServer::begin() {
-        return words_to_documents_.begin();
+    std::set<int>::const_iterator  SearchServer::begin() {
+        return documents_id_.begin();
     }
 
-    std::map<int, std::set<std::string>>::const_iterator  SearchServer::end() {
-        return words_to_documents_.end();
+    std::set<int>::const_iterator  SearchServer::end() {
+        return documents_id_.end();
     }
 
     void SearchServer::RemoveDocument(int document_id) {
@@ -80,6 +80,8 @@ SearchServer::SearchServer(const std::string& stop_words_text)
         words_to_documents_.erase(find_if(words_to_documents_.begin(), words_to_documents_.end(), [document_id](auto document) {return document.first == document_id;}));
         
         documents_.erase(find_if(documents_.begin(), documents_.end(), [document_id](auto document) {return document.first == document_id;}));
+        
+        documents_id_.erase(find_if(documents_id_.begin(), documents_id_.end(), [document_id](auto document) {return document == document_id;}));
         
         auto iter = word_to_document_freqs_.begin(); 
         while (iter != word_to_document_freqs_.end()) {
