@@ -61,9 +61,9 @@ public:
     
     //int GetDocumentId(int index);
     
-    std::map<int, std::set<std::string>>::const_iterator begin();
+    std::set<int>::const_iterator begin();
     
-    std::map<int, std::set<std::string>>::const_iterator end();
+    std::set<int>::const_iterator end();
     
     int GetDocumentCount() const;
 
@@ -81,6 +81,7 @@ private:
     std::map<int, DocumentData> documents_;
     std::vector<int> documents_q_;
     std::map<int, std::set<std::string>> words_to_documents_;
+    std::set<int> documents_id_;
     
     bool IsStopWord(const std::string& word) const;
     
