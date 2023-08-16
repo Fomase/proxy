@@ -9,6 +9,7 @@
 #include <iterator>
 #include "document.h"
 #include "string_processing.h"
+#include "log_duration.h"
 
 using namespace std::literals;
 
@@ -18,8 +19,8 @@ SearchServer::SearchServer(const std::string& stop_words_text)
     {
     }
 
-    void SearchServer::AddDocument(int document_id, const std::string& document, DocumentStatus status, // обработаь наличие спецсимволов
-                     const std::vector<int>& ratings) {
+    void SearchServer::AddDocument(int document_id, const std::string& document, DocumentStatus status, const std::vector<int>& ratings) {
+        LogDuration("AddDocument");
         const std::vector<std::string> words = SplitIntoWordsNoStop(document);
         if (document_id < 0 || documents_.count(document_id) != 0) {
             throw std::invalid_argument("Некорректный id документа"s);
@@ -35,11 +36,13 @@ SearchServer::SearchServer(const std::string& stop_words_text)
 
     std::set<int> SearchServer::FindDuplicates(int document_id) const {
         std::set<int> duplicates;
-        auto iter = find_if(words_to_documents_.begin(), words_to_documents_.end(), [document_id](auto document){return document_id == document.first;});
-        const auto& document_words = *iter;
-        
+        auto iter = words_to_documents_.begin();
+
+        auto& document_words = words_to_documents_.at(document_id);
+
         while (iter != words_to_documents_.end()) {
-            iter = find_if(words_to_documents_.begin(), words_to_documents_.end(), [document_words](auto document){return document_words.second == document.second;});
+            ++iter;
+            iter = find_if(iter, words_to_documents_.end(), [document_words, document_id](auto document){return document_words == document.second && document_id < document.first;});
             if (iter != words_to_documents_.end()) {
                 const auto& document_id = *iter;
                 duplicates.insert(document_id.first);
